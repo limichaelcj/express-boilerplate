@@ -1,5 +1,6 @@
-Express Boilerplate (Linux)
-===============================
+Express Boilerplate
+===================
+###### For Linux systems
 
 ### Usage
 In the root directory, generate a new express.js template with:
