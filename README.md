@@ -25,5 +25,5 @@ bash generate <options>
 ```bash
 # ../express-boilerplate
 bash generate -pug -db -bcrypt -passport
-# Generates a template with dotenv, pug, mongoose, bcrypt, express-session, and passport preconfigurations
+# Generates a template with dotenv, pug, mongoose, bcrypt, express-session, and passport preconfigured
 ```
