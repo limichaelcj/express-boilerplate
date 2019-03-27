@@ -23,6 +23,7 @@ bash generate <options>
 ### Example
 
 ```bash
-bash install -pug -db -bcrypt -passport
+# ../express-boilerplate
+bash generate -pug -db -bcrypt -passport
 # Generates a template with dotenv, pug, mongoose, bcrypt, express-session, and passport preconfigurations
 ```
