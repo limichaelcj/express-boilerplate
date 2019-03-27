@@ -1,0 +1,348 @@
+#!/bin/bash
+
+
+
+main(){
+  declare_defaults
+
+  for arg in "$@"; do
+    case $arg in
+      -env)
+        ENV=1
+        ;;
+      -pug)
+        PUG=1
+        ;;
+      -db)
+        DB=1
+        ;;
+      -bcrypt)
+        BCRYPT=1
+        ;;
+      -helmet)
+        HELMET=1
+        ;;
+      -passport)
+        PASSPORT=1
+        ;;
+      -session)
+        SESSION=1
+        ;;
+      -socket)
+        SOCKET=1
+        ;;
+      -complete)
+        ENV=1
+        PUG=1
+        DB=1
+        BCRYPT=1
+        HELMET=1
+        SESSION=1
+        PASSPORT=1
+        SOCKET=1
+        ;;
+      *)
+        ;;
+    esac
+  done
+
+  require_dependencies
+  build
+  echo "Generation complete."
+  echo "Configure package.json start script and .env variables to run app."
+}
+
+declare_defaults() {
+  ENV=0
+  PUG=0
+  DB=0
+  BCRYPT=0
+  HELMET=0
+  SESSION=0
+  PASSPORT=0
+  SOCKET=0
+}
+
+confirm_strict() {
+  if [ -z "$1" ]; then
+    local message="Confirm?"
+  else
+    local message="$1"
+  fi
+  while [[ $yn != [YyNn] ]]; do
+    echo -ne "$1 [y/n]: "
+    read yn
+  done
+  if [[ $yn = [Nn] ]]; then
+    echo "Operation aborted."
+    exit
+  fi
+  return 1
+}
+
+require_dependencies() {
+  if [ $SOCKET -eq 1 ]; then
+    PASSPORT=1
+  fi
+  if [ $PASSPORT -eq 1 -o $SOCKET -eq 1 ]; then
+    SESSION=1
+  fi
+  if [ $SESSION -eq 1 ]; then
+    ENV=1
+  fi
+  if [ $DB -eq 1 ]; then
+    ENV=1
+  fi
+}
+
+build() {
+  install_packages
+  echo -n "Building app..."
+  build_app
+  build_directories
+  echo "Done"
+}
+
+install_packages() {
+  echo "Installing packages..."
+  local env=""
+  local pug=""
+  local db=""
+  local bcrypt=""
+  local helmet=""
+  local session=""
+  local passport=""
+  local socket=""
+  if [ $ENV -eq 1 ]; then
+    env="dotenv"
+  fi
+  if [ $PUG -eq 1 ]; then
+    pug="pug"
+  fi
+  if [ $DB -eq 1 ]; then
+    db="mongoose"
+  fi
+  if [ $BCRYPT -eq 1 ]; then
+    bcrypt="bcrypt"
+  fi
+  if [ $HELMET -eq 1 ]; then
+    helmet="helmet"
+  fi
+  if [ $SESSION -eq 1 ]; then
+    session="express-session"
+  fi
+  if [ $PASSPORT -eq 1 ]; then
+    passport="passport passport-local"
+  fi
+  if [ $SOCKET -eq 1 ]; then
+    if [ $PASSPORT -eq 1 ]; then
+      socket="socket.io passport.socketio"
+    else
+      socket="socket.io"
+    fi
+  fi
+  npm init
+  npm install express cookie-parser http-errors $env $pug $db $bcrypt $helmet $session $passport $socket
+  npm install --save-dev morgan debug
+  echo "...Done"
+}
+
+build_app() {
+  touch app.js
+  # write lines
+  if [ $ENV -eq 1 ]; then
+    echo "// configure environment variables
+require('dotenv').config()" >> app.js
+  fi
+  echo "// main dependencies
+const express = require('express')
+const cookieParser = require('cookie-parser')
+const createError = require('http-errors')" >> app.js
+  if [ $DB -eq 1 ]; then
+    echo "// database dependencies
+const mongoose = require('mongoose')" >> app.js
+  fi
+  if [ $BCRYPT -eq 1 ]; then
+    echo "const bcrypt = require('bcrypt')" >> app.js
+  fi
+  if [ $HELMET -eq 1 ]; then
+    echo "// security dependencies
+const helmet = require('helmet')" >> app.js
+  fi
+  if [ $PASSPORT -eq 1 ]; then
+    echo "// auth, session dependencies
+const session = require('express-session')
+const passport = require('passport')" >> app.js
+  fi
+  if [ $SOCKET -eq 1 ]; then
+    echo "const sessionStore = new session.MemoryStore()" >> app.js
+  fi
+  echo "// app
+const app = express()" >> app.js
+  if [ $SOCKET -eq 1 ]; then
+    echo "const http = require('http').Server(app)
+const io = require('socket.io')(http)
+const passportSocketIO = require('passport.socketio')" >> app.js
+  fi
+  echo "// dev dependencies
+const path = require('path')
+const logger = require('morgan')
+const debug = require('debug')
+// routes
+const indexRouter = require(path.join(__dirname, 'server', 'routes', 'index'))" >> app.js
+  if [ $PUG -eq 1 ]; then
+    echo "
+app.set('view engine', 'pug');
+app.set('views', path.join(__dirname, 'views'));" >> app.js
+  fi
+  echo "
+app.use('/public', express.static(process.cwd() + '/public'));
+app.use(logger('dev'));
+app.use(cookieParser());
+app.use(express.json());
+app.use(express.urlencoded({extended:true}));" >> app.js
+  if [ $HELMET -eq 1 ]; then
+    echo "app.use(helmet());" >> app.js
+  fi
+  if [ $SESSION -eq 1 ]; then
+    echo "
+app.use(session({
+  secret: process.env.SECRET,
+  resave: true,
+  saveUninitialized: true," >> app.js
+    if [ $SOCKET -eq 1 ]; then
+      echo "  key: 'express.sid',
+  store: sessionStore" >> app.js
+    fi
+    echo "}));" >> app.js
+  fi
+  if [ $PASSPORT -eq 1 ]; then
+    echo "app.use(passport.initialize());
+app.use(passport.session());" >> app.js
+  fi
+  echo "
+app.use('/', indexRouter);
+
+// catch 404 and forward to error handler
+app.use((req,res,next)=>{
+  next(createError(404));
+})
+// error handler
+app.use((err,req,res,next)=>{
+  res.locals.message = err.message;
+  res.locals.error = req.app.get('env') === 'development' ? err: {};
+  // render error page
+  res.status(err.status || 500);
+  res.render('error', {
+    status: err.status,
+    message: err.message
+  });
+})" >> app.js
+  if [ $DB -eq 1 ]; then
+    echo "
+// database connection -- only allow requests after connection success
+mongoose.connect(process.env.DATABASE, {
+  useNewUrlParser: true,
+  useFindAndModify: false
+});
+const db = mongoose.connection;
+db.on('error', console.error.bind(console, 'MongoDB connection error:'));
+db.once('open', async ()=>{
+  console.log('MongoDB connection successful');
+
+  // configure authentication
+  require('./server/auth')();
+
+  // async/await for all setup to complete before listening" >> app.js
+  fi
+  echo "  var server = app.listen(process.env.PORT || 3000, () => {
+    console.log('Listening on port ' + server.address().port + '...');
+  })" >> app.js
+  if [ $DB -eq 1 ]; then
+    echo "});" >> app.js
+  fi
+}
+
+build_directories() {
+  mkdir public
+  touch public/bundle.css
+  touch public/bundle.js
+  mkdir server
+  mkdir server/routes
+  touch server/auth.js
+  echo "const LocalStrategy = require('passport-local')
+
+module.exports = function() {
+  // configure authentication strategies
+}" >> server/auth.js
+  touch server/routes/index.js
+  echo "const router = require('express').Router();
+
+router.get('/', (req,res)=>{
+  res.render('index');
+})
+
+module.exports = router;" >> server/routes/index.js
+  mkdir views
+  if [ $PUG -eq 1 ]; then
+    touch views/layout.pug
+    touch views/index.pug
+    echo "html(lang='en')
+head
+  meta(charset='utf-8')
+  meta(http-equiv='x-ua-compatible' content='ie=edge')
+  title Express Boilerplate
+  meta(name='description' content='An Express.js app boilerplate with customizable preconfigurations')
+  meta(name='viewport' content='width=device-width, initial-scale=1')
+  //- link(rel='icon' sizes='192x192' href='#')
+  //- link(rel='shortcut icon' href='#')
+  //- normalize.css
+  link(rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/normalize/6.0.0/normalize.min.css')
+  //- Google Roboto font
+  link(href='https://fonts.googleapis.com/css?family=Roboto:300,400,500,700' rel='stylesheet')
+  //- link(rel='stylesheet' href='bundle.css')
+  //- link(type='text/javascript' src='bundle.js')
+body
+  block content" >> views/layout.pug
+    echo "extends layout
+
+block content
+  h1 Index" >> views/index.pug
+  else
+    touch views/index.html
+    echo "<!doctype html>
+<html lang='en'>
+<head>
+  <meta charset='utf-8'>
+  <meta http-equiv='x-ua-compatible' content='ie=edge'>
+  <title>Express Boilerplate</title>
+  <meta name='description' content='An Express.js app boilerplate with customizable preconfigurations'>
+  <meta name='viewport' content='width=device-width, initial-scale=1'>
+  <!-- icons
+  <link rel='icon' sizes='192x192' href='#'>
+  <link rel='shortcut icon' href='#'>
+  -->
+  <!-- normalize.css -->
+  <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/normalize/6.0.0/normalize.min.css'>
+  <!-- Google Roboto font -->
+  <link href='https://fonts.googleapis.com/css?family=Roboto:300,400,500,700' rel='stylesheet'>
+  <link rel='stylesheet' href='bundle.css'>
+</head>
+<body>
+
+  <script src='bundle.js' async></script>
+</body>
+</html>
+"
+  fi
+  touch .gitignore
+  echo "node_modules/" >> .gitignore
+  if [ $ENV -eq 1 ]; then
+    echo ".env" >> .gitignore
+    touch .env
+    echo "SECRET=keepitsecretkeepitsafe
+DATABASE=mongodb://localhost:27017" >> .env
+  fi
+}
+
+main "$@"
