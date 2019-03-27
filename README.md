@@ -16,9 +16,9 @@ bash generate <options>
 - `-passport`: Include `passport` package for user authentication. _**(Includes env, session)**_
 - `-socket`: Include `socket.io` package for real-time server-client communication. _**(Includes env, session, passport)**_
 ### Notes
-- Files will be generated in the current directory and the generate script can be deleted afterward.
-- Node must be installed on your computer to run the script properly.
-- Remember to change the package.json and .env files according to your app after running the generate script.
+- Files will be generated in the current working directory and the generate script can be deleted afterward.
+- Node.js must be installed on your computer to run the script properly.
+- Remember to change the `package.json` and `.env` files according to your app after running the generate script.
 
 ### Example
 
