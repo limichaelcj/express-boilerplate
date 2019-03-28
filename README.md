@@ -5,7 +5,7 @@ Express Boilerplate
 ### Usage
 In the root directory, generate a new express.js template with:
 ```bash
-bash generate <options>
+bash install <options>
 ```
 ### Options
 - `-env`: Include `dotenv` package and create `.env` file in root
@@ -16,7 +16,8 @@ bash generate <options>
 - `-session`: Include `express-session` package to implement session cookies <sub>_(**includes** -env)_</sub>
 - `-passport`: Include `passport` packages for user authentication <sub>_(**includes** -env, -session)_</sub>
 - `-socket`: Include `socket.io` packages for real-time server-client communication <sub>_(**includes** -env, -session, -passport)_</sub>
-- `-r`, `-remove`: Auto-remove the generate script after running it.
+- `-r`, `-remove`: Auto-remove the install script after running it.
+- `-complete`: Install with all the above options.
 ### Notes
 - Files will be generated in the current working directory and the generate script can be deleted afterward.
 - Node.js must be installed on your computer to run the script properly.
@@ -26,6 +27,6 @@ bash generate <options>
 
 ```bash
 # ../express-boilerplate
-bash generate -pug -db -bcrypt -passport
+bash install -pug -db -bcrypt -passport
 # Generates a template with dotenv, pug, mongoose, bcrypt, express-session, and passport preconfigured
 ```
