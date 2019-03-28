@@ -16,6 +16,7 @@ bash generate <options>
 - `-session`: Include `express-session` package to implement session cookies. _**(Includes env)**_
 - `-passport`: Include `passport` package for user authentication. _**(Includes env, session)**_
 - `-socket`: Include `socket.io` package for real-time server-client communication. _**(Includes env, session, passport)**_
+- `-r`,`-remove`: Auto-remove this script after generating the template.
 ### Notes
 - Files will be generated in the current working directory and the generate script can be deleted afterward.
 - Node.js must be installed on your computer to run the script properly.
