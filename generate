@@ -29,6 +29,9 @@ main(){
       -socket)
         SOCKET=1
         ;;
+      -remove|-r)
+        REMOVE=1
+        ;;
       -complete)
         ENV=1
         PUG=1
@@ -38,6 +41,7 @@ main(){
         SESSION=1
         PASSPORT=1
         SOCKET=1
+        REMOVE=1
         ;;
       *)
         ;;
@@ -46,6 +50,10 @@ main(){
 
   require_dependencies
   build
+  if [ $REMOVE -eq 1 ]; then
+    echo "Removing generation script..."
+    rm -f $0
+  fi
   echo "Generation complete."
   echo "Configure package.json start script and .env variables to run app."
 }
@@ -59,23 +67,7 @@ declare_defaults() {
   SESSION=0
   PASSPORT=0
   SOCKET=0
-}
-
-confirm_strict() {
-  if [ -z "$1" ]; then
-    local message="Confirm?"
-  else
-    local message="$1"
-  fi
-  while [[ $yn != [YyNn] ]]; do
-    echo -ne "$1 [y/n]: "
-    read yn
-  done
-  if [[ $yn = [Nn] ]]; then
-    echo "Operation aborted."
-    exit
-  fi
-  return 1
+  DELETE=0
 }
 
 require_dependencies() {
