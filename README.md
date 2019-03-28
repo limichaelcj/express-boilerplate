@@ -14,8 +14,8 @@ bash generate <options>
 - `-bcrypt`: Include `bcrypt` package for password encryption.
 - `-helmet`: Include `helmet` package for securing HTTP headers
 - `-session`: Include `express-session` package to implement session cookies. _**(Includes env)**_
-- `-passport`: Include `passport` package for user authentication. _**(Includes env, session)**_
-- `-socket`: Include `socket.io` package for real-time server-client communication. _**(Includes env, session, passport)**_
+- `-passport`: Include `passport` packages for user authentication. _**(Includes env, session)**_
+- `-socket`: Include `socket.io` packages for real-time server-client communication. _**(Includes env, session, passport)**_
 - `-r`, `-remove`: Auto-remove the generate script after running it.
 ### Notes
 - Files will be generated in the current working directory and the generate script can be deleted afterward.
