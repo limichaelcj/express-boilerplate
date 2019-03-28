@@ -2,9 +2,14 @@ Express Boilerplate
 ===================
 ###### For Linux systems
 
-### Usage
-In the root directory, generate a new express.js template with:
+### Installation
+1. Clone this repository
 ```bash
+git clone git@github.com:mcli830/express-boilerplate.git
+```
+2. In the root directory, generate a new express.js template with:
+```bash
+# ../express-boilerplate
 bash install <options>
 ```
 ### Options
