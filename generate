@@ -1,7 +1,5 @@
 #!/bin/bash
 
-
-
 main(){
   declare_defaults
 
@@ -196,7 +194,7 @@ app.set('view engine', 'pug');
 app.set('views', path.join(__dirname, 'views'));" >> app.js
   fi
   echo "
-app.use('/public', express.static(process.cwd() + '/public'));
+app.use('/', express.static(path.join(__dirname, 'public')));
 app.use(logger('dev'));
 app.use(cookieParser());
 app.use(express.json());
@@ -287,6 +285,7 @@ module.exports = router;" >> server/routes/index.js
   if [ $PUG -eq 1 ]; then
     touch views/layout.pug
     touch views/index.pug
+    touch views/error.pug
     echo "html(lang='en')
 head
   meta(charset='utf-8')
@@ -308,6 +307,10 @@ body
 
 block content
   h1 Index" >> views/index.pug
+    echo "extends layout
+
+block content
+  h1 #{error.status}: #{error.message}" >> views/error.pug
   else
     touch views/index.html
     echo "<!doctype html>
